@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Einkaufsliste</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen text-slate-900 selection:bg-indigo-200/70 selection:text-slate-900">
+  <!-- Background -->
+  <div class="fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950"></div>
+    <div class="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-indigo-500/25 blur-3xl"></div>
+    <div class="absolute top-40 -right-24 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl"></div>
+    <div class="absolute bottom-[-6rem] left-1/3 h-[22rem] w-[22rem] rounded-full bg-fuchsia-500/12 blur-3xl"></div>
+
+    <div class="absolute inset-0 opacity-[0.07]"
+         style="background-image: linear-gradient(to right, rgba(255,255,255,0.35) 1px, transparent 1px),
+                                 linear-gradient(to bottom, rgba(255,255,255,0.35) 1px, transparent 1px);
+                background-size: 48px 48px;"></div>
+  </div>
+
+  <main class="min-h-screen flex items-center justify-center px-5 py-12">
+    <div class="w-full max-w-3xl">
+
+      <!-- Header -->
+      <div class="mb-6 flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-baseline gap-3 flex-wrap">
+          <h1 class="text-3xl font-extrabold tracking-tight text-white">🛒 Einkaufsliste</h1>
+          <span class="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80 ring-1 ring-white/15 backdrop-blur">
+            geschützt
+          </span>
+        </div>
+
+        <a th:href="@{/}"
+           class="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/15 backdrop-blur hover:bg-white/15 transition focus:outline-none focus:ring-2 focus:ring-white/40">
+          ← Zurück
+        </a>
+      </div>
+
+      <!-- Card -->
+      <div class="relative overflow-hidden rounded-3xl bg-white/10 ring-1 ring-white/15 shadow-2xl backdrop-blur-xl">
+        <div class="absolute -top-32 -right-32 h-72 w-72 rounded-full bg-indigo-400/20 blur-2xl"></div>
+        <div class="absolute -bottom-36 -left-36 h-80 w-80 rounded-full bg-cyan-300/15 blur-2xl"></div>
+
+        <div class="relative p-8 md:p-10">
+
+          <!-- Form -->
+          <div class="flex items-center justify-between gap-4 flex-wrap">
+            <h2 class="text-lg font-bold text-white">Neuen Artikel hinzufügen</h2>
+            <p class="text-xs text-white/60">
+              Preise werden als <span class="font-mono text-white/70">1.234,56 €</span> formatiert.
+            </p>
+          </div>
+
+          <form th:action="@{/artikel}" method="post" class="mt-5 grid grid-cols-1 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-white/80 mb-1">Artikelname</label>
+              <input name="name" required placeholder="z. B. Tomaten"
+                     class="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-white placeholder-white/35 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-white/80 mb-1">Menge</label>
+                <input name="menge" type="number" min="1" value="1" required
+                       class="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-white/80 mb-1">Preis (€)</label>
+                <input name="preis" type="number" step="0.01" min="0" required placeholder="z. B. 2.49"
+                       class="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-white placeholder-white/35 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+              </div>
+            </div>
+
+            <button type="submit"
+                    class="mt-1 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-indigo-500/20 ring-1 ring-white/10 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/40">
+              Artikel hinzufügen
+              <span class="ml-2" aria-hidden="true">+</span>
+            </button>
+          </form>
+
+          <hr class="my-8 border-white/10">
+
+          <!-- List -->
+          <div class="flex items-center justify-between gap-4 flex-wrap">
+            <h2 class="text-xl font-bold text-white">Aktuelle Liste</h2>
+
+            <!-- Total (also show when empty as 0,00) -->
+            <div class="inline-flex items-center gap-3 rounded-2xl bg-white/5 ring-1 ring-white/10 px-4 py-2">
+              <span class="text-sm font-medium text-white/70">Gesamtpreis</span>
+              <span class="text-lg font-extrabold text-white"
+                    th:text="${#numbers.formatDecimal(gesamtPreis != null ? gesamtPreis : 0, 1, 'POINT', 2, 'COMMA')} + ' €'">
+                0,00 €
+              </span>
+            </div>
+          </div>
+
+          <div th:if="${#lists.isEmpty(artikelListe)}"
+               class="mt-4 rounded-2xl bg-white/5 ring-1 ring-white/10 p-6 text-white/60">
+            Noch keine Artikel hinzugefügt.
+          </div>
+
+          <ul th:if="${!#lists.isEmpty(artikelListe)}" class="mt-4 space-y-3">
+            <li th:each="a : ${artikelListe}"
+                class="flex items-start sm:items-center justify-between gap-4 rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
+
+              <div class="min-w-0">
+                <div class="font-semibold text-white truncate" th:text="${a.name}">Artikel</div>
+                <div class="mt-1 text-sm text-white/60">
+                  Menge: <span class="font-semibold text-white/75" th:text="${a.menge}">1</span>
+                  <span class="mx-2 text-white/25">·</span>
+                  Einzelpreis:
+                  <span class="font-semibold text-white/75"
+                        th:text="${#numbers.formatDecimal(a.preis != null ? a.preis : 0, 1, 'POINT', 2, 'COMMA')}">
+                    0,00
+                  </span> €
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 shrink-0">
+                <!-- line total -->
+                <div class="text-right">
+                  <div class="text-xs uppercase tracking-wide text-white/45">Summe</div>
+                  <div class="font-extrabold text-white"
+                       th:text="${#numbers.formatDecimal(a.gesamtpreis != null ? a.gesamtpreis : 0, 1, 'POINT', 2, 'COMMA')} + ' €'">
+                    0,00 €
+                  </div>
+                </div>
+
+                <!-- remove -->
+                <form th:action="@{/artikel/loeschen}" method="post" class="ml-1">
+                   <input type="hidden" name="id" th:value="${a.id}">
+                  <button type="submit"
+                          class="inline-flex items-center justify-center rounded-xl bg-red-500/15 px-3.5 py-2 text-sm font-semibold text-red-200 ring-1 ring-red-400/20 transition hover:bg-red-500/25 focus:outline-none focus:ring-2 focus:ring-white/40"
+                          title="Entfernen"
+                          aria-label="Artikel entfernen">
+                    ✕
+                  </button>
+                </form>
+              </div>
+
+            </li>
+          </ul>
+
+          <!-- Hint -->
+          <div class="mt-8 rounded-2xl bg-white/5 ring-1 ring-white/10 p-5">
+            <h3 class="text-sm font-bold text-white">Hinweis</h3>
+            <p class="mt-2 text-sm text-white/70 leading-relaxed">
+              Alle Euro-Beträge werden in deutschem Format angezeigt:
+              <span class="font-mono text-white/80">Tausenderpunkt</span> und
+              <span class="font-mono text-white/80">Dezimalkomma</span> (z. B. <span class="font-mono text-white/85">1.234,56 €</span>).
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <footer class="mt-8 text-center text-xs text-white/40">
+        © <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2026</span> · Demo-App
+      </footer>
+
+    </div>
+  </main>
+</body>
+</html>
